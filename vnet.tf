@@ -10,7 +10,7 @@ provider "azurerm" {
 resource "azurerm_resource_group" "terrar_rgp" {
     name     = "${var.resource-group}"
     location = "Eastus"
-    tags = "${var.tags}"
+    #tags = "${var.tags}"
 }
 
 
