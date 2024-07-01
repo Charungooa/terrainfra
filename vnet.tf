@@ -3,16 +3,23 @@ provider "azurerm" {
 
 }
 
-data "azurerm_resource_group" "existing_rgp" {
-  name = "${var.resource-group}"
+# data "azurerm_resource_group" "existing_rgp" {
+#   name = "${var.resource-group}"
   
+# }
+resource "azurerm_resource_group" "terrar_rgp" {
+    name     = "${var.resource-group}"
+    location = "Eastus"
+    tags = "${var.tags}"
 }
+
+
 
 # this is the resource block
 resource "azurerm_virtual_network" "vnet2" {
   name                = "${var.vnetname}-vnet"
-  location            = data.azurerm_resource_group.existing_rgp.location
-  resource_group_name = data.azurerm_resource_group.existing_rgp.name
+  location            = azurerm_resource_group.terrar_rgp.location
+  resource_group_name = azurerm_resource_group.terrar_rgp.name
   address_space       = var.address-space
   # tags                = merge(var.tags, map("Name", format("%s-%s", "VNet", var.name)))
 }
@@ -21,13 +28,13 @@ resource "azurerm_subnet" "subnet-vnet2" {
    virtual_network_name =   azurerm_virtual_network.vnet2.name
    address_prefixes =     ["10.0.0.0/24"]  
    name = "${var.vnetname}-subnet"
-   resource_group_name =   data.azurerm_resource_group.existing_rgp.name  
+   resource_group_name =   azurerm_resource_group.terrar_rgp.name  
 }
 
 resource "azurerm_network_security_group" "terraform_security" {
   name                = "terraform_nsg"
-  location            = data.azurerm_resource_group.existing_rgp.location
-  resource_group_name = data.azurerm_resource_group.existing_rgp.name
+  location            = azurerm_resource_group.terrar_rgp.location
+  resource_group_name = azurerm_resource_group.terrar_rgp.name
 
   security_rule {
     name                       = "test123"
