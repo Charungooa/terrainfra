@@ -1,5 +1,5 @@
 name: Deploy
-# this file is for destroying resources
+# this file is for deploying the resources resources
 on:
   push:
     branches:
