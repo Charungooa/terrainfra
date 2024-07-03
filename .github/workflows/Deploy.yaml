@@ -1,40 +1,45 @@
-name: Deploy
-# this file is for deploying the resources resources
+name: Azure Terraform Deployment
+
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Deploy the resources'
-        required: true
-        default: 'Deploy'
 
 jobs:
-  destroy:
+  deploy:
     runs-on: ubuntu-latest
-    environment: production
+
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Azure credentials
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.TERRAAZURE }}
+      - name: Azure Login
+        id: azure_login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.TERRAAZURE }}
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: '1.0.0'
+      - name: Set up Terraform
+        run: |
+          echo "Setting up Terraform"
+          curl -LO https://releases.hashicorp.com/terraform/1.1.6/terraform_1.1.6_linux_amd64.zip
+          unzip terraform_1.1.6_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
 
-    - name: Terraform Init
-      run: terraform init
+      - name: Configure Azure credentials for Terraform
+        run: |
+          echo "Configuring Azure credentials for Terraform"
+          AZURE_CREDENTIALS=${{ secrets.TERRAAZURE }}
+          echo $AZURE_CREDENTIALS | jq -r '.clientId' | xargs -I {} echo "export ARM_CLIENT_ID={}" >> $GITHUB_ENV
+          echo $AZURE_CREDENTIALS | jq -r '.clientSecret' | xargs -I {} echo "export ARM_CLIENT_SECRET={}" >> $GITHUB_ENV
+          echo $AZURE_CREDENTIALS | jq -r '.tenantId' | xargs -I {} echo "export ARM_TENANT_ID={}" >> $GITHUB_ENV
+          echo $AZURE_CREDENTIALS | jq -r '.subscriptionId' | xargs -I {} echo "export ARM_SUBSCRIPTION_ID={}" >> $GITHUB_ENV
 
-    - name: Terraform Plan
-      run: terraform Plan -var-file=cvnet.tfvars -auto-approve
+      - name: Terraform Init
+        run: terraform init
 
-    - name: Terraform Apply
-      run: terraform Apply -var-file=cvnet.tfvars -auto-approve
+      - name: Terraform Plan
+        run: terraform plan
 
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
