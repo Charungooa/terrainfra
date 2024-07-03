@@ -14,32 +14,33 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Azure Login
-        id: azure_login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.TERRAAZURE }}
 
       - name: Set up Terraform
-        run: |
-          echo "Setting up Terraform"
-          curl -LO https://releases.hashicorp.com/terraform/1.1.6/terraform_1.1.6_linux_amd64.zip
-          unzip terraform_1.1.6_linux_amd64.zip
-          sudo mv terraform /usr/local/bin/
-
-      - name: Configure Azure credentials for Terraform
-        run: |
-          echo "Configuring Azure credentials for Terraform"
-          AZURE_CREDENTIALS=${{ secrets.TERRAAZURE }}
-          echo $AZURE_CREDENTIALS | jq -r '.clientId' | xargs -I {} echo "export ARM_CLIENT_ID={}" >> $GITHUB_ENV
-          echo $AZURE_CREDENTIALS | jq -r '.clientSecret' | xargs -I {} echo "export ARM_CLIENT_SECRET={}" >> $GITHUB_ENV
-          echo $AZURE_CREDENTIALS | jq -r '.tenantId' | xargs -I {} echo "export ARM_TENANT_ID={}" >> $GITHUB_ENV
-          echo $AZURE_CREDENTIALS | jq -r '.subscriptionId' | xargs -I {} echo "export ARM_SUBSCRIPTION_ID={}" >> $GITHUB_ENV
+        uses: hashicorp/setup-terraform@v1
 
       - name: Terraform Init
+        env:
+          ARM_CLIENT_ID: ${{ fromJson(secrets.TERRAAZURE).clientId }}
+          ARM_CLIENT_SECRET: ${{ fromJson(secrets.TERRAAZURE).clientSecret }}
+          ARM_TENANT_ID: ${{ fromJson(secrets.TERRAAZURE).tenantId }}
+          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.TERRAAZURE).subscriptionId }}
         run: terraform init
 
       - name: Terraform Plan
+        env:
+          ARM_CLIENT_ID: ${{ fromJson(secrets.TERRAAZURE).clientId }}
+          ARM_CLIENT_SECRET: ${{ fromJson(secrets.TERRAAZURE).clientSecret }}
+          ARM_TENANT_ID: ${{ fromJson(secrets.TERRAAZURE).tenantId }}
+          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.TERRAAZURE).subscriptionId }}
         run: terraform plan
 
       - name: Terraform Apply
+        env:
+          ARM_CLIENT_ID: ${{ fromJson(secrets.TERRAAZURE).clientId }}
+          ARM_CLIENT_SECRET: ${{ fromJson(secrets.TERRAAZURE).clientSecret }}
+          ARM_TENANT_ID: ${{ fromJson(secrets.TERRAAZURE).tenantId }}
+          ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.TERRAAZURE).subscriptionId }}
         run: terraform apply -auto-approve
